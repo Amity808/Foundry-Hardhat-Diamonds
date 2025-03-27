@@ -49,7 +49,7 @@ contract StakingFacetERC20Test is Test {
         // ERC20Mock(erc20Token).mint(user, START_BALANCE);
 
         // Add StakingFacet to Diamond
-        bytes4[] memory selectors = new bytes4[](9); //  selectors for the functions we're testing
+        bytes4[] memory selectors = new bytes4[](11); //  selectors for the functions we're testing
 
         selectors[0] = StakingFacetERC20.stakeERC20.selector;
         selectors[1] = StakingFacetERC20.withdraw.selector;
@@ -60,6 +60,8 @@ contract StakingFacetERC20Test is Test {
         selectors[6] = StakingFacetERC20.getUserStakeDetails.selector;
         selectors[7] = StakingFacetERC20.getContractOwner.selector;
         selectors[8] = StakingFacetERC20.getMinLockDuratioLib.selector;
+        selectors[9] = StakingFacetERC20.getStakingTokenLib.selector;
+        selectors[10] = StakingFacetERC20.getInitialAprLib.selector;
 
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
 
@@ -172,4 +174,20 @@ contract StakingFacetERC20Test is Test {
             DEFAULT_LOCK_DURATION
         );
     }
+
+    // function testgetStakingToken() public {
+    
+    //     assertEq(
+    //         StakingFacetERC20(address(diamond)).getUserStakeDetails(user).stakingToken,
+    //         erc20Token
+    //     );
+    // }
+    function testgetInitialAprLib() public {
+        assertEq(
+            StakingFacetERC20(address(diamond)).getInitialAprLib(),
+            DEFAULT_APR
+        );
+    }
+
+
 }

@@ -148,6 +148,7 @@ library LibAppStorage {
         s.stakingToken = IERC20(_stakingToken);
         s.nftCollection = IERC721(_nftCollection);
         s.currentRewardRate = _initialAPR;
+        s.initialApr = _initialAPR;
         s.erc1155Token = IERC1155(_erc1155Token);
     }
     event OwnershipTransferred(

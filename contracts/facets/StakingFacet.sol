@@ -337,11 +337,11 @@ contract StakingFacetERC20 {
         return LibAppStorage.getMinLockDuration();
     }
 
-    function getStakingToken() external view returns (IERC20) {
+    function getStakingTokenLib() external view returns (IERC20) {
         return LibAppStorage.getStakingToken();
     }
     
-    function getInitialAprLib() internal view returns (uint256) {
+    function getInitialAprLib() external view returns (uint256) {
         return LibAppStorage.getInitialApr();
     }
 }
