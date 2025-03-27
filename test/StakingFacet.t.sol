@@ -49,7 +49,7 @@ contract StakingFacetERC20Test is Test {
         // ERC20Mock(erc20Token).mint(user, START_BALANCE);
 
         // Add StakingFacet to Diamond
-        bytes4[] memory selectors = new bytes4[](11); //  selectors for the functions we're testing
+        bytes4[] memory selectors = new bytes4[](12); //  selectors for the functions we're testing
 
         selectors[0] = StakingFacetERC20.stakeERC20.selector;
         selectors[1] = StakingFacetERC20.withdraw.selector;
@@ -62,6 +62,7 @@ contract StakingFacetERC20Test is Test {
         selectors[8] = StakingFacetERC20.getMinLockDuratioLib.selector;
         selectors[9] = StakingFacetERC20.getStakingTokenLib.selector;
         selectors[10] = StakingFacetERC20.getInitialAprLib.selector;
+        selectors[11] = StakingFacetERC20.getTimeUntilUnlockERC20.selector;
 
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
 
@@ -116,7 +117,6 @@ contract StakingFacetERC20Test is Test {
     }
 
     function testStakeERC20() public {
-        
         vm.startPrank(user);
         token.approve(address(diamond), 100);
 
@@ -135,30 +135,14 @@ contract StakingFacetERC20Test is Test {
         // vm.prank(user);
         // console.log("user", StakingFacetERC20(address(diamond)).getUserStakeDetails(user));
         assertEq(
-        StakingFacetERC20(address(diamond)).getUserStakeDetails(user).stakedAmount,
+            StakingFacetERC20(address(diamond))
+                .getUserStakeDetails(user)
+                .stakedAmount,
             100,
             "Incorrect staked amount"
         );
         vm.stopPrank();
     }
-
-    // function testWithdraw() public {
-    //     // Setup test - first stake some tokens
-    //     testStakeERC20();
-
-    //     // Advance time to pass the lock duration
-    //     vm.warp(block.timestamp + DEFAULT_LOCK_DURATION + 1);
-    //     vm.roll(block.number + 1);
-
-    //     //Prank call
-    //     vm.prank(user);
-
-    //     //Withdraw tokens
-    //     StakingFacetERC20(address(diamond)).withdraw(100);
-
-    //     //Verify user's balance
-    //     assertEq(IERC20(erc20Token).balanceOf(user), 100, "Withdrawal failed");
-    // }
 
     function testgetContractOwner() public {
         assertEq(
@@ -176,7 +160,7 @@ contract StakingFacetERC20Test is Test {
     }
 
     // function testgetStakingToken() public {
-    
+
     //     assertEq(
     //         StakingFacetERC20(address(diamond)).getUserStakeDetails(user).stakingToken,
     //         erc20Token
@@ -189,5 +173,46 @@ contract StakingFacetERC20Test is Test {
         );
     }
 
+    function testWithdraw() public {
+        // Setup test - first stake some tokens
+        testStakeERC20();
 
+        // Advance time to pass the lock duration
+        vm.warp(block.timestamp + DEFAULT_LOCK_DURATION + 1);
+        vm.roll(block.number + 1);
+
+        //Prank call
+        vm.prank(user);
+
+        //Withdraw tokens
+        StakingFacetERC20(address(diamond)).withdraw(100);
+
+        //Verify user's balance
+        assertEq(IERC20(erc20Token).balanceOf(user), 210, "Withdrawal failed");
+    }
+
+    function testGetTimeUntilUnlockERC20() public {
+        // Stake some tokens
+        vm.startPrank(user);
+        token.approve(address(diamond), 100);
+        StakingFacetERC20(address(diamond)).stakeERC20(100);
+        vm.stopPrank();
+
+        // Wait for a period less than the lock duration
+        uint256 elapsedTime = DEFAULT_LOCK_DURATION / 2;
+        vm.warp(block.timestamp + elapsedTime);
+        vm.roll(block.number + 1);
+
+        // Calculate the expected remaining time
+        uint256 expectedRemainingTime = DEFAULT_LOCK_DURATION - elapsedTime;
+
+        // Get the remaining time from the contract
+        uint256 actualRemainingTime = StakingFacetERC20(address(diamond))
+            .getTimeUntilUnlockERC20(user);
+
+        // Assert that the remaining time is correct, allowing for a small tolerance
+        int256 difference = int256(actualRemainingTime) -
+            int256(expectedRemainingTime);
+        assertTrue(difference <= 1, "Incorrect remaining time");
+    }
 }
